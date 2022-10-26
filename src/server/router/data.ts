@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { t } from "../trpc"
 import { Unit } from "../../../src/pages/index"
+import { faker } from "@faker-js/faker"
 
 export const CATEGORIES = [
 	"Stationary combustion",
@@ -30,11 +31,23 @@ export const dataRouter = t.router({
 			z
 				.object({
 					unit: z.string().nullish(),
+					randomize: z.boolean()
 				})
 				.nullish(),
 		)
 		.query(async ({ ctx, input }) => {
 			// you can access the prisma client from ctx.prisma
+			if (input?.randomize) {
+				await ctx.prisma.dataPoint.deleteMany()
+				const operations = []
+				for (let i = 0; i < 1000; i++) {
+					const category = faker.helpers.arrayElement(CATEGORIES)
+					const kgCO2 = faker.datatype.float({ min: 50, max: 1500 })
+					operations.push(ctx.prisma.dataPoint.create({ data: { category, kgCO2 } }))
+				}
+				await Promise.all(operations)
+			}
+			
 			const emissionsByCategory = await ctx.prisma?.dataPoint.groupBy({
 				by: ['category'],
 				_sum: {

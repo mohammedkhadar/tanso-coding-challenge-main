@@ -6,11 +6,8 @@ import { useState } from "react";
 export const options = {
 	responsive: true,
 	plugins: {
-		legend: {
-			position: 'top' as const,
-		},
 		title: {
-			display: true,
+			display: false,
 			text: 'Emissions',
 		},
 	},
@@ -23,8 +20,10 @@ export enum Unit {
 
 export default function Home() {
 	const [unit, setUnit] = useState<Unit>(Unit.kgCO2)
+	const [randomize, setRandomize] = useState(false)
 	const helloQuery = trpc.data.hello.useQuery({ text: "and welcome" })
-	const { data=[] } = trpc.data.prismaExample.useQuery({ unit })
+	const { data=[] } = trpc.data.prismaExample.useQuery({ unit, randomize })
+	
 	const chartData = {
 		labels: data.map(({ category }) => category),
 		datasets: [{
@@ -37,6 +36,10 @@ export default function Home() {
 	]}
 
 	const changeHandler = event => setUnit(event.target.value)
+	const showRandomData = () => {
+		setRandomize(true)
+		setTimeout(() => setRandomize(false), 1000)
+	}
 
 	return (
 		<>
@@ -49,7 +52,7 @@ export default function Home() {
 			<div className="container mx-auto flex flex-column items-center justify-center min-h-screen">
 				<div style={{width: '600px', height: '600px', margin: 'auto'}}>
 					<Bar options={options} data={chartData} />
-					<div>
+					<div className=".p-0">
 						<div>
 							<input type='radio' name='unit' value='kgCO2' onChange={changeHandler} checked={unit === Unit.kgCO2} />
 							<label htmlFor='kgCO2'>{Unit.kgCO2}</label>
@@ -60,8 +63,14 @@ export default function Home() {
 							<label htmlFor='kgCO2'>{Unit.tCO2}</label>
 						</div>
 					</div>
+					<div className="container mx-auto flex justify-center">
+						<button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={showRandomData}>
+							Randomize Data
+						</button>
+					</div>
 				</div>
 			</div>
+			
 
 			
 			<main className="container mx-auto flex flex-col items-center justify-center min-h-screen">
